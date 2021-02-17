@@ -264,7 +264,7 @@ void setup() {
 void loop() {
 	unsigned long now = millis();
 
-  config.OTA->loop(now);
+  // config.OTA->loop(now);
 
 	// since this is single core, we don't care about
 	// synchronization

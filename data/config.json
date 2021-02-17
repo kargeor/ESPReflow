@@ -4,7 +4,7 @@
 	"hostname": "ESPReflow",
 	"user": "user",
 	"password": "esp",
-	"otaPassword": "",
+	"otaPassword": "ota",
 	"measureInterval": 500,
 	"reportInterval": 10000
 }

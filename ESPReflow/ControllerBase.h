@@ -35,8 +35,6 @@
 #define LED_BLUE 2
 #define BUZZER_A 5
 #define BUZZER_B 4
-#define SDA 2
-#define SCL 0
 
 #define DEFAULT_TARGET 60
 #define MAX_ON_TIME 1000 * 60 * 2
@@ -156,8 +154,9 @@ public:
 	unsigned long elapsed(unsigned long now);
 
 private:
-	PCA9536 pca9536;
-	MAX31855 thermocouple;
+	//PCA9536 pca9536;
+	//MAX31855 thermocouple;
+
 	bool _locked;
 	bool _heater;
 	bool _last_heater;

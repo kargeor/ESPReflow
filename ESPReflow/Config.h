@@ -75,8 +75,6 @@ public:
 	double tuner_noise_band;
 	double tuner_output_step;
 
-	EasyOTA *OTA;
-
 	typedef std::function<bool(JsonObject& json, Config * self)> THandlerFunction_parse;
 
 public:
