@@ -15,6 +15,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
+#include <ArduinoOTA.h>
 #include <ESPAsyncWebServer.h>
 #include <SPIFFSEditor.h>
 #include <ArduinoJson.h>
@@ -264,7 +265,7 @@ void setup() {
 void loop() {
 	unsigned long now = millis();
 
-  // config.OTA->loop(now);
+  ArduinoOTA.handle();
 
 	// since this is single core, we don't care about
 	// synchronization

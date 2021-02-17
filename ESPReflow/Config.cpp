@@ -15,6 +15,8 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  **/
 
+#include <ArduinoOTA.h>
+
 #include "Config.h"
 
 Config::Stage::Stage(const char * n, const char * p, float t, float r, float s) :
@@ -160,24 +162,57 @@ bool Config::load_json(const String& name, size_t max_size, THandlerFunction_par
 }
 
 bool Config::setup_OTA() {
-//	Serial.println("OTA setup");
-//
-//	OTA = new EasyOTA(hostname);
-//
-//	std::map<String, String>::iterator I = networks.begin();
-//	while (I != networks.end()) {
-//		OTA->addAP(I->first, I->second);
-//		Serial.println("Add network: " + I->first);
-//		I++;
-//	}
-//
-//	OTA->onConnect([](const String& ssid, EasyOTA::STATE state) {
-//		S_printf("Connected %s, state: %s", ssid.c_str(), state == EasyOTA::EOS_STA ? "Station" : "Access Point");
-//	});
-//
-//	OTA->onMessage([](const String& msg, int line) {
-//		S_printf("OTA message: %s", msg.c_str());
-//	});
+  Serial.println("Wifi...");
+
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  while (WiFi.waitForConnectResult() != WL_CONNECTED) {
+    Serial.println("Connection Failed! Rebooting...");
+    delay(5000);
+    ESP.restart();
+  }
+  
+  Serial.println("OTA setup");
+
+  ArduinoOTA.setHostname(hostname.c_str());
+  ArduinoOTA.setPassword(otaPassword.c_str());
+
+  ArduinoOTA.onStart([]() {
+    String type;
+    if (ArduinoOTA.getCommand() == U_FLASH) {
+      type = "sketch";
+    } else { // U_FS
+      type = "filesystem";
+    }
+
+    // NOTE: if updating FS this would be the place to unmount FS using FS.end()
+    Serial.println("Start updating " + type);
+  });
+  ArduinoOTA.onEnd([]() {
+    Serial.println("\nEnd");
+  });
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+  });
+  ArduinoOTA.onError([](ota_error_t error) {
+    Serial.printf("Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR) {
+      Serial.println("Auth Failed");
+    } else if (error == OTA_BEGIN_ERROR) {
+      Serial.println("Begin Failed");
+    } else if (error == OTA_CONNECT_ERROR) {
+      Serial.println("Connect Failed");
+    } else if (error == OTA_RECEIVE_ERROR) {
+      Serial.println("Receive Failed");
+    } else if (error == OTA_END_ERROR) {
+      Serial.println("End Failed");
+    }
+  });
+  ArduinoOTA.begin();
+
+  Serial.println("OTA Ready");
+  Serial.print("IP address: ");
+  Serial.println(WiFi.localIP());
 }
 
 bool Config::save_config(AsyncWebServerRequest *request, uint8_t * data, size_t len, size_t index, size_t total) {
