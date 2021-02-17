@@ -18,12 +18,13 @@
 #ifndef CONTROLLER_BASE_H
 #define CONTROLLER_BASE_H
 
-#include <PID_v10.h>
+
 #include <SPI.h>
-#include <max31855.h>
-#include <SparkFun_PCA9536_Arduino_Library.h>
+
 #include "Config.h"
-#include <PID_AutoTune_v0.h>  // https://github.com/t0mpr1c3/Arduino-PID-AutoTune-Library
+
+#include "PID_v10.h"
+#include "PID_AutoTune_v0.h"  // https://github.com/t0mpr1c3/Arduino-PID-AutoTune-Library
 
 #define thermoDO 12 // D7
 #define thermoCS 13 // D6
