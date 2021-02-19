@@ -22,7 +22,6 @@ ControllerBase::ControllerBase(Config& cfg) :
 	config(cfg),
 	pidTemperature(&_temperature, &_target_control, &_target, .5/DEFAULT_TEMP_RISE_AFTER_OFF, 5.0/DEFAULT_TEMP_RISE_AFTER_OFF, 4/DEFAULT_TEMP_RISE_AFTER_OFF, DIRECT),
 	aTune(&_temperature, &_target_control, &_target, &_now, DIRECT)
-//	thermocouple(thermoCLK, thermoCS, thermoDO)
 {
 	_readings.reserve(15 * 60);
 
@@ -33,27 +32,9 @@ ControllerBase::ControllerBase(Config& cfg) :
 	pidTemperature.SetSampleTime(config.measureInterval * 1000);
   pidTemperature.SetMode(AUTOMATIC);
 	pidTemperature.SetOutputLimits(0, 1);
-	// thermocouple.begin(); TODO
-	Wire.begin(); // TODO: init 1115
-//	pca9536.begin(Wire);
-//	pca9536.pinMode(RELAY, OUTPUT);
-//	pca9536.pinMode(LED_RED, OUTPUT);
-//	pca9536.pinMode(LED_GREEN, OUTPUT);
-//	pca9536.pinMode(LED_BLUE, OUTPUT);
-//
-//	pca9536.write(RELAY, LOW);
-//	pca9536.write(LED_RED, LOW);
-//	pca9536.write(LED_GREEN, LOW);
-//	pca9536.write(LED_BLUE, LOW);
-//	pca9536.write(LED_RED, HIGH);
-//	delay(100);
-//	pca9536.write(LED_GREEN, HIGH);
-//	delay(100);
-//	pca9536.write(LED_BLUE, HIGH);
-//	delay(100);
-//	pca9536.write(LED_RED, LOW);
-//	pca9536.write(LED_GREEN, LOW);
-//	pca9536.write(LED_BLUE, LOW);
+ 
+  ads1115.begin();
+  ads1115.setGain(GAIN_ONE);
 
 	_mode = _last_mode = INIT;
 	_temperature = 0;
@@ -74,13 +55,37 @@ ControllerBase::ControllerBase(Config& cfg) :
 
 	setPID("default");
 
-	//thermocouple.read(); TODO
-	_temperature = 10; //thermocouple.getTemperature();
+	_temperature = ads1115_read();
 
 	S_printf("Current temperature: %f\n", _temperature);
 	_readings.push_back(temperature_to_log(_temperature));
 }
 
+double convertToCelsius(double adcval) {
+  double R = 1000.0 * ((26400.0 / adcval) - 1.0);
+
+  double s;
+  s = R / 100000.0;
+  s = log(s);
+  s /= 3950.0;
+  s += 1.0 / (25.0 + 273.15);
+  s = 1.0 / s;
+  s -= 273.15;
+  
+  return s;
+}
+
+double ControllerBase::ads1115_read() {
+  uint16_t adc0 = ads1115.readADC_SingleEnded(0);
+  uint16_t adc1 = ads1115.readADC_SingleEnded(1);
+
+  double t0 = convertToCelsius((double)adc0);
+  double t1 = convertToCelsius((double)adc1);
+
+  callMessage("DEBUG: Raw ADC %d %d %.2lf %.2lf", adc0, adc1, t0, t1);
+  
+  return (t0 + t1) / 2.0;
+}
 
 void ControllerBase::loop(unsigned long now)
 {
@@ -190,11 +195,11 @@ float ControllerBase::log_to_temperature(ControllerBase::Temperature_t t) {
 float ControllerBase::measure_temperature(unsigned long now) {
 	if (now - last_m > config.measureInterval * 1.1) {
 		last_m = now;
-		//thermocouple.read(); TODO
-		return 110; //temperature(thermocouple.getTemperature());
+		return temperature(ads1115_read());
 	} else
 		return temperature();
 }
+
 unsigned long ControllerBase::elapsed(unsigned long now) {
 	return now - _start_time;
 }
@@ -220,8 +225,7 @@ void ControllerBase::handle_mode(unsigned long now) {
 	if (_last_mode <= OFF && _mode > OFF)
 	{
 		_start_time = now;
-		//thermocouple.read(); TODO
-		_temperature = 100; // thermocouple.getTemperature();
+		_temperature = ads1115_read();
 		pidTemperature.Reset();
 		_readings.clear();
 		_readings.push_back(temperature_to_log(_temperature));
@@ -249,8 +253,7 @@ void ControllerBase::handle_mode(unsigned long now) {
 
 	} else if (_mode <= OFF && _last_mode > OFF)
 	{
-		//thermocouple.read(); TODO
-		_temperature = 75; //thermocouple.getTemperature();
+		_temperature = ads1115_read();
 		_readings.push_back(temperature_to_log(_temperature));
 		if (_last_mode == REFLOW || _last_mode == REFLOW_COOL)
 			setPID("default");
@@ -264,8 +267,7 @@ void ControllerBase::handle_mode(unsigned long now) {
 
 void ControllerBase::handle_measure(unsigned long now) {
 	double last_temperature = _temperature;
-	//thermocouple.read(); TODO!
-	_temperature = 50; //thermocouple.getTemperature();
+	_temperature = ads1115_read();
 	double rate = 1000.0 * (_temperature - last_temperature) / (double)config.measureInterval;
 	_avg_rate = _avg_rate * .9 + rate * .1;
 

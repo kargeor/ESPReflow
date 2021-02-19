@@ -25,6 +25,7 @@
 
 #include "PID_v10.h"
 #include "PID_AutoTune_v0.h"  // https://github.com/t0mpr1c3/Arduino-PID-AutoTune-Library
+#include "Adafruit_ADS1015.h"
 
 #define thermoDO 12 // D7
 #define thermoCS 13 // D6
@@ -38,7 +39,7 @@
 
 #define DEFAULT_TARGET 60
 #define MAX_ON_TIME 1000 * 60 * 2
-#define MAX_TEMPERATURE 400
+#define MAX_TEMPERATURE 300
 #define MIN_TEMP_RISE_TIME 1000 * 40
 #define MIN_TEMP_RISE 10
 #define CONTROL_HYSTERISIS .01
@@ -153,9 +154,12 @@ public:
 	float measure_temperature(unsigned long now);
 	unsigned long elapsed(unsigned long now);
 
+  double ads1115_read();
+
 private:
-	//PCA9536 pca9536;
-	//MAX31855 thermocouple;
+	// PCA9536 pca9536;
+	// MAX31855 thermocouple;
+  Adafruit_ADS1115 ads1115;
 
 	bool _locked;
 	bool _heater;
