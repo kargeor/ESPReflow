@@ -6,5 +6,5 @@
 	"password": "esp",
 	"otaPassword": "ota",
 	"measureInterval": 500,
-	"reportInterval": 10000
+	"reportInterval": 2000
 }

@@ -7,6 +7,7 @@ export class WebsocketService {
 
   constructor() {
 		this.url = get_url("ws", "ws");
+    console.log("websocket url is", this.url);
 		this.messages = new MessageDatabase();
 		this.reset_readings();
 	}

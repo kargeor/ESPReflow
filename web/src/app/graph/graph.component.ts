@@ -12,7 +12,19 @@ export class GraphComponent implements OnInit {
   constructor(public ws: WebsocketService, public configs: ConfigsService) { }
 
 	lineChartOptions:any = {
-    responsive: true
+    responsive: true,
+    animation: {
+      duration: 0
+    },
+    scales: {
+      yAxes:[{
+        ticks: {
+          beginAtZero: true,
+          min: 0,
+          max: 300
+        }
+      }]
+    }
   };
   lineChartColors:Array<any> = [
     { // grey

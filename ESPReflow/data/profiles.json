@@ -6,7 +6,7 @@
 	},
 	"profiles": {
 		"test": {
-			"name": "Simple test profile",
+			"name": "Test profile 1",
 			"stages": ["preheat", "soak", "reflow", "cooldown"],
 			"preheat": {"pid": "IRHotPlate", "target": 40, "rate": 1, "stay": 40},
 			"soak": {"pid": "IRHotPlate", "target": 60, "rate": 0.5, "stay": 40},
@@ -14,7 +14,7 @@
 			"cooldown": {"pid": "IRHotPlate", "target": 50, "rate": 2, "stay": 40}
 		},
 		"test-no-rate": {
-			"name": "Simple test profile",
+			"name": "Test profile 2",
 			"stages": ["preheat", "soak", "reflow", "cooldown"],
 			"preheat": {"pid": "IRHotPlate", "target": 40, "rate": 0, "stay": 40},
 			"soak": {"pid": "IRHotPlate", "target": 60, "rate": 0, "stay": 40},
@@ -22,7 +22,7 @@
 			"cooldown": {"pid": "IRHotPlate", "target": 50, "rate": 0, "stay": 40}
 		},
 		"leaded": {
-			"name": "Simple low temp leaded paste profile",
+			"name": "Low-temp Leaded paste profile",
 			"stages": ["preheat", "soak", "reflow", "cooldown"],
 			"preheat": {"pid": "IRHotPlate", "target": 130, "rate": 2, "stay": 40},
 			"soak": {"pid": "IRHotPlate", "target": 180, "rate": 0.5, "stay": 0},
@@ -30,7 +30,7 @@
 			"cooldown": {"pid": "IRHotPlate", "target": 50, "rate": 2, "stay": 0}
 		},
 		"leadfree": {
-			"name": "Simple lead free paste profile",
+			"name": "Lead-Free paste profile",
 			"stages": ["preheat", "soak", "reflow", "cooldown"],
 			"preheat": {"pid": "IRHotPlate", "target": 150, "rate": 2, "stay": 0},
 			"soak": {"pid": "IRHotPlate", "target": 200, "rate": 0.5, "stay": 0},
