@@ -167,9 +167,9 @@ bool Config::setup_OTA() {
   WiFi.mode(WIFI_STA);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   while (WiFi.waitForConnectResult() != WL_CONNECTED) {
-    Serial.println("Connection Failed! Rebooting...");
-    delay(5000);
-    ESP.restart();
+    Serial.println("WiFi Connection Failed!");
+    delay(1000);
+    return false;
   }
   
   Serial.println("OTA setup");
@@ -213,6 +213,8 @@ bool Config::setup_OTA() {
   Serial.println("OTA Ready");
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
+
+  return true;
 }
 
 bool Config::save_config(AsyncWebServerRequest *request, uint8_t * data, size_t len, size_t index, size_t total) {

@@ -18,6 +18,8 @@
 #include <Wire.h>
 #include "ControllerBase.h"
 
+void oled_write_line(int lineNo, const char * format, ...);
+
 ControllerBase::ControllerBase(Config& cfg) :
 	config(cfg),
 	pidTemperature(&_temperature, &_target_control, &_target, .5/DEFAULT_TEMP_RISE_AFTER_OFF, 5.0/DEFAULT_TEMP_RISE_AFTER_OFF, 4/DEFAULT_TEMP_RISE_AFTER_OFF, DIRECT),
@@ -48,17 +50,17 @@ ControllerBase::ControllerBase(Config& cfg) :
 
 	_heater = _last_heater = false;
 
-	pinMode(BUZZER_A, OUTPUT);
-	pinMode(BUZZER_B, OUTPUT);
-
-	tone(BUZZER_A, 440, 100);
-
 	setPID("default");
 
 	_temperature = ads1115_read();
 
 	S_printf("Current temperature: %f\n", _temperature);
 	_readings.push_back(temperature_to_log(_temperature));
+
+  pinMode(HEATER_PIN_BTM, OUTPUT);
+  pinMode(HEATER_PIN_TOP, OUTPUT);
+  digitalWrite(HEATER_PIN_BTM, HIGH);
+  digitalWrite(HEATER_PIN_TOP, HIGH);
 }
 
 double convertToCelsius(double adcval) {
@@ -83,6 +85,7 @@ double ControllerBase::ads1115_read() {
   double t1 = convertToCelsius((double)adc1);
 
   callMessage("DEBUG: Raw ADC %d %d %.2lf %.2lf", adc0, adc1, t0, t1);
+  oled_write_line(6, "Temp: %.2lf %.2lf", t0, t1);
   
   return (t0 + t1) / 2.0;
 }
@@ -133,8 +136,8 @@ void ControllerBase::loop(unsigned long now)
 
 	handle_safety(now);
 
-	//pca9536.write(RELAY, _heater);
-	//pca9536.write(LED_RED, _heater);
+ digitalWrite(HEATER_PIN_BTM, _heater ? LOW : HIGH);
+ digitalWrite(HEATER_PIN_TOP, _heater ? LOW : HIGH);
 
 	if (_onHeater && _heater != _last_heater)
 		_onHeater(_heater);
@@ -297,34 +300,28 @@ void ControllerBase::handle_safety(unsigned long now) {
 
 	if (now - _last_heater_on > MAX_ON_TIME * factor && _temperature > SAFE_TEMPERATURE)
 	{
-		mode(ERROR_OFF);
-		_heater = false;
+//		mode(ERROR_OFF);
+//		_heater = false;
 		callMessage("ERROR: Heater time limit exceeded (%i seconds)", (int)(MAX_ON_TIME / 1000));
 	}
 
 	if (_temperature > MAX_TEMPERATURE)
 	{
-		mode(ERROR_OFF);
-		_heater = false;
+//		mode(ERROR_OFF);
+//		_heater = false;
 		callMessage("ERROR: Temperature limit exceeded");
 	}
 
 	if (isnan(_temperature)) {
-		mode(ERROR_OFF);
-		_heater = false;
+//		mode(ERROR_OFF);
+//		_heater = false;
 		callMessage("ERROR: Error reading temperature. Check the probe!");
 	}
 
 	if (now - _watchdog > WATCHDOG_TIMEOUT) {
-		mode(ERROR_OFF);
-		_heater = false;
+//		mode(ERROR_OFF);
+//		_heater = false;
 		callMessage("ERROR: Watchdog timeout. Check connectivity!");
-	}
-return;
-	if (now - _start_time > MIN_TEMP_RISE_TIME && _temperature - _readings[0] < MIN_TEMP_RISE && _temperature < SAFE_TEMPERATURE) {
-		mode(ERROR_OFF);
-		_heater = false;
-		callMessage("ERROR: Temperature did not rise for %i seconds!",  (int)(MIN_TEMP_RISE_TIME / 1000));
 	}
 }
 

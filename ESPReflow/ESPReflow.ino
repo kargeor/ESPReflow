@@ -20,6 +20,10 @@
 #include <SPIFFSEditor.h>
 #include <ArduinoJson.h>
 
+#include <Wire.h>
+#include <SSD1306Ascii.h>
+#include <SSD1306AsciiWire.h>
+
 #include "ReflowController_v1.h"
 #include "AsyncJson.h"
 #include "Config.h"
@@ -31,6 +35,20 @@ ControllerBase * controller = NULL;
 ControllerBase * last_controller = NULL;
 AsyncWebSocketClient * _client = NULL;
 Config config("/config.json", "/profiles.json");
+
+static SSD1306AsciiWire oled;
+
+void oled_write_line(int lineNo, const char * format, ...) {
+  char buffer[128];
+  va_list args;
+  va_start(args, format);
+  vsnprintf(buffer, sizeof(buffer), format, args);
+  va_end (args);
+
+  oled.setCursor(0, lineNo);
+  oled.print(buffer);
+  oled.clearToEOL();
+}
 
 void textThem(const char * text) {
 	int tryId = 0;
@@ -119,6 +137,7 @@ void setupController(ControllerBase * c)
 		root["mode"] = controller->translate_mode(current);
 
 		textThem(root);
+    oled_write_line(0, "%s", controller->translate_mode(current));
 	});
 	c->onStage([](const char * stage, float target){
 		S_printf("Reflow stage: %s", stage);
@@ -127,6 +146,9 @@ void setupController(ControllerBase * c)
 		root["stage"] = stage;
 		root["target"] = target;
 		textThem(root);
+
+   oled_write_line(2, "%s", stage);
+   oled_write_line(4, "Target: %.2lf", target);
 	});
 
 	last_controller = tmp;
@@ -169,10 +191,21 @@ void send_data(AsyncWebSocketClient * client)
 void setup() {
 	Serial.begin(115200);
 
+  Wire.begin();
+  oled.begin(&Adafruit128x64, 0x3C);
+  oled.setFont(X11fixed7x14B);
+  oled.clear();
+  oled_write_line(0, "Starting...");
+
 	SPIFFS.begin();
 	config.load_config();
 	config.load_profiles();
-	config.setup_OTA();
+ 
+	if (config.setup_OTA()) {
+    oled_write_line(2, "WiFi OK");
+	} else {
+    oled_write_line(2, "WiFi Error");
+	}
 
 	server.addHandler(&ws);
 	server.addHandler(&events);
@@ -269,8 +302,10 @@ void loop() {
 
 	// since this is single core, we don't care about
 	// synchronization
-	if (controller)
+	if (controller) {
 		controller->loop(now);
+	}
+
 	if (last_controller) {
 		delete last_controller;
 		last_controller = NULL;
